@@ -3,6 +3,7 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import { GOOGLE_SHEET } from "@/lib/constants";
+import { SchemeMapper } from "@/features/scheme-mapper/SchemeMapper";
 
 async function safeFetchJson(input: RequestInfo | URL, init?: RequestInit) {
   try {
@@ -65,6 +66,7 @@ function Section({
         padding: 18,
         background: "#ffffff",
         boxShadow: "0 6px 24px rgba(2, 76, 227, 0.05)",
+        overflow: 'hidden',
       }}
     >
       <div
@@ -154,7 +156,7 @@ function Table({ headers, rows }: { headers: string[]; rows: (string | number)[]
 
 export default function Home() {
   const { data: session } = useSession();
-  const [mode, setMode] = useState<"create" | "update">("create");
+  const [mode, setMode] = useState<"create" | "update" | "markup">("create");
 
   // CREATE state
   const [jsonText, setJsonText] = useState(
@@ -374,6 +376,7 @@ export default function Home() {
         }}
       >
         {[
+          { key: "markup", label: "Mark up an image" },
           { key: "create", label: "Create polygons" },
           { key: "update", label: "Update polygons" },
         ].map((tab) => {
@@ -413,6 +416,12 @@ export default function Home() {
       Target spreadsheet: <code>{GOOGLE_SHEET.id}</code> — Sheets:{" "}
       <code>{GOOGLE_SHEET.sheets.floors}</code>, <code>{GOOGLE_SHEET.sheets.polygons}</code>
     </div>
+  );
+
+  const MarkupSection = (
+    <Section title="Mark up an image">
+      <SchemeMapper />
+    </Section>
   );
 
   const UpdateSection = (
@@ -599,7 +608,9 @@ export default function Home() {
         <code>{GOOGLE_SHEET.sheets.floors}</code>, <code>{GOOGLE_SHEET.sheets.polygons}</code>
       </div>
 
-      {mode === "update" ? UpdateSection : CreateSection}
+      { mode === "markup" && MarkupSection }
+      { mode === "update" && UpdateSection }
+      { mode === "create" && CreateSection }      
     </div>
   );
 }

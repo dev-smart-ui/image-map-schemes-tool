@@ -1,0 +1,6 @@
+{
+  "points_min": 3,
+  "default_fill_color": "rgba(255,0,0,0.3)",
+  "default_pre_fill_color": "rgba(255,0,0,0.5)",
+  "default_stroke_color": "#000"
+}
