@@ -1,5 +1,5 @@
 import { useSchemeMapperContext } from '@/context/SchemeMapperContext';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ImageMapper from 'react-img-mapper';
 
 export const Mapper = () => {
@@ -7,11 +7,24 @@ export const Mapper = () => {
     image, 
     polygons,
   } = useSchemeMapperContext();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [parentWidth, setParentWidth] = useState(0);
+
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) setParentWidth(containerRef.current.offsetWidth);
+    };
+
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+
+    return () => window.removeEventListener("resize", updateWidth);
+  }, [image]);
 
   if (!image) return <></>
 
   return (
-    <div className="flex justify-center image-mapper">
+    <div ref={containerRef} className="flex justify-center image-mapper">
       <ImageMapper 
         width={image.width}            
         height={image.height} 
@@ -19,6 +32,8 @@ export const Mapper = () => {
         name={'map'} 
         areas={polygons}
         ref={null} 
+        responsive={true}
+        parentWidth={parentWidth}
       />
     </div>
   )

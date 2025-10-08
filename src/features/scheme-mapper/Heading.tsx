@@ -1,16 +1,20 @@
 'use client'
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSchemeMapperContext } from "@/context/SchemeMapperContext";
 import { Modal } from "@/components/ui/modals/Modal";
 import { Button } from "@/components/ui/buttons/Button";
 import { Mapper } from "./Mapper";
+import { Divider } from "./Divider";
 
 export const Heading = () => {
   const { 
+    name,
     image, 
-    setImage, 
     polygons, 
+    exportData,
+    setImage, 
+    setName,
     setPoints,
     setPolygons 
   } = useSchemeMapperContext();
@@ -34,7 +38,8 @@ export const Heading = () => {
   }
 
   const onExportModalAcceptClickHandler = () => {
-    navigator.clipboard.writeText(JSON.stringify(polygons, null, 2))
+    console.log(exportData);
+    navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
     setIsCopied(true);
   }
 
@@ -42,6 +47,10 @@ export const Heading = () => {
     setIsExportModalOpen(false)
     setIsCopied(false);
   }
+
+  useEffect(() => {
+    setIsCopied(false);
+  }, [name])
 
   return (
     <div className="flex items-center gap-4 mb-4">
@@ -99,11 +108,29 @@ export const Heading = () => {
       <Modal 
         isOpen={isExportModalOpen}
         title="Export JSON"
-        acceptLabel={isCopied ? 'Copied!' : 'Copy JSON'}
+        acceptLabel={isCopied ? 'Copied!' : 'Copy'}
+        acceptType={isCopied ? 'success' : 'secondary'}
         onAccept={onExportModalAcceptClickHandler}
         onClose={onExportModalCloseClickHandler}
       >
-        {JSON.stringify(polygons, null, 2)}
+        <div>
+          <div className="inline-flex flex-col gap-2">
+            <label htmlFor="inputName">Scheme name:</label>
+            <input 
+              id="inputName" 
+              type="text" 
+              className="bg-[var(--primary-color)] p-2 text-[14px]" 
+              value={name} 
+              onChange={e => setName(e.target.value)} 
+            />
+          </div>
+        </div>
+
+        <Divider />
+
+        <code>
+          {JSON.stringify(exportData, null, 2)}
+        </code>
       </Modal>
 
       <Modal 
