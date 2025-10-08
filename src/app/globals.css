@@ -6,6 +6,7 @@
   --text-color: #000;
   --ant-border-color: #0b61ff;
   --success-color: green;
+  --error-color: red;
   --accent-color: #0b61ff;
   --accent-light-color: #e8f0ff;
   --overlay-color: rgba(0,0,0,.8);
@@ -18,6 +19,7 @@
     --text-color: #000;
     --ant-border-color: red;
     --success-color: green;
+    --error-color: red;
   }
 }
 
