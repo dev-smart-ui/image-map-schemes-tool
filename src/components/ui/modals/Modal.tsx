@@ -10,6 +10,7 @@ export const Modal = ({
   children,
   acceptLabel,
   cancelLabel,
+  acceptType = 'success',
   onAccept,
   onCancel,
   onClose,
@@ -18,6 +19,7 @@ export const Modal = ({
   title: string,
   children: ReactNode,
   acceptLabel?: string,
+  acceptType?: 'default' | 'secondary' | 'success' | 'icon',
   cancelLabel?: string,
   onAccept?: () => void,
   onCancel?: () => void,
@@ -58,7 +60,7 @@ export const Modal = ({
 
             { acceptLabel && (     
               <Button 
-                type="success" 
+                type={acceptType} 
                 onClick={onAccept}
               >
                 {acceptLabel}
