@@ -32,12 +32,14 @@ export const Heading = () => {
       const response = await fetch(imageUrlState);
 
       if (response.status !== 200) {
-        throw 'err';
+        throw 'Error in load image!';
       }
 
       const blob = await response.blob();      
+      const mime = blob.type;
+      const ext = mime.split('/')[1] || 'bin';
 
-      const file = new File([blob], 'image.jpg', { type: blob.type });
+      const file = new File([blob], `scheme.${ext}`, { type: mime });
 
       if (!file) return;      
 
