@@ -1,76 +1,54 @@
 "use server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { GOOGLE_SHEET } from "@/lib/constants";
-import {
-  appendRows,
-  findRowByFirstColumn,
-  updateRow,
-  findAllRowsByFirstColumn,
-  deleteRowsByNumbers,
-} from "@/lib/sheets";
+import { appendRows, findRowByFirstColumn, updateRow } from "@/lib/sheets";
 import { ensureSheetsAndHeaders } from "./initSheets";
+import { GOOGLE_SHEET } from "@/lib/constants";
 
 export async function saveOrUpdateFloorPolygons(payload: any) {
-  const session = await getServerSession(authOptions);
-  const accessToken = (session as any)?.accessToken as string | undefined;
-  if (!accessToken) return { success: false, error: "Not authenticated" };
+  try {
+    if (!payload?.name || !payload?.url || !payload?.json) {
+      return { success: false, error: "Invalid payload. Expected { name, url, json, mode? }" };
+    }
 
-  if (!payload?.floorOrLevel || !payload?.imageId || !payload?.imageSizes) {
-    return { success: false, error: "Invalid payload" };
+    const mode = payload.mode === "update" ? "update" : "create";
+
+    const init = await ensureSheetsAndHeaders(GOOGLE_SHEET.id);
+    if (!init.success) return init;
+
+    const SHEET_NAME = GOOGLE_SHEET.sheets.schemes;
+    const existingRow = await findRowByFirstColumn(SHEET_NAME, payload.name);
+    const now = new Date().toISOString();
+
+    const newRow = [
+      String(payload.name),
+      String(payload.url),
+      typeof payload.json === "string" ? payload.json : JSON.stringify(payload.json),
+      now,
+    ];
+
+    if (mode === "create") {
+      if (existingRow) {
+        return {
+          success: false,
+          error: `Record with name "${payload.name}" already exists. Choose a unique name.`,
+        };
+      }
+
+      const ok = await appendRows(SHEET_NAME, [newRow], "A:D");
+      if (!ok) return { success: false, error: "Failed to append new row to Google Sheet." };
+
+      return { success: true, message: `Scheme "${payload.name}" successfully created.` };
+    }
+
+    if (!existingRow) {
+      return { success: false, error: `Record "${payload.name}" not found for update.` };
+    }
+
+    await updateRow(SHEET_NAME, existingRow, newRow, 4);
+    return { success: true, message: `Scheme "${payload.name}" successfully updated.` };
+
+  } catch (e: any) {
+    console.error(e?.response?.data || e);
+    return { success: false, error: e?.message || "Internal server error" };
   }
-
-  const init = await ensureSheetsAndHeaders();
-  if (!init.success) return init;
-
-  const now = new Date().toISOString();
-
-  // Floors row
-  const floorsRow = [
-    String(payload.floorOrLevel),
-    String(payload.imageId),
-    String(payload.imageUrl ?? ""),
-    Number(payload.imageSizes?.widthPx ?? 0),
-    Number(payload.imageSizes?.heightPx ?? 0),
-    now,
-  ];
-
-  const existingRow = await findRowByFirstColumn(
-    accessToken,
-    GOOGLE_SHEET.sheets.floors,
-    payload.floorOrLevel
-  );
-
-  if (existingRow) {
-    await updateRow(accessToken, GOOGLE_SHEET.sheets.floors, existingRow, floorsRow, 6);
-  } else {
-    const ok = await appendRows(accessToken, GOOGLE_SHEET.sheets.floors, [floorsRow], "A:F");
-    if (!ok) return { success: false, error: "Append to FloorsAndLevels failed" };
-  }
-
-  const polygonRows: any[][] = (payload.units ?? []).map((u: any) => ([
-    String(payload.floorOrLevel),
-    String(u.unitId),
-    JSON.stringify({ polygons: u.polygons ?? [] }),
-    now,
-  ]));
-
-  const rowsToDelete = await findAllRowsByFirstColumn(
-    accessToken,
-    GOOGLE_SHEET.sheets.polygons,
-    payload.floorOrLevel
-  );
-  if (rowsToDelete.length) {
-    await deleteRowsByNumbers(accessToken, GOOGLE_SHEET.sheets.polygons, rowsToDelete);
-  }
-  if (polygonRows.length) {
-    const okPoly = await appendRows(accessToken, GOOGLE_SHEET.sheets.polygons, polygonRows, "A:D");
-    if (!okPoly) return { success: false, error: "Append to Polygons failed" };
-  }
-
-  return {
-    success: true,
-    data: { updatedFloorRow: !!existingRow, polygonsWritten: polygonRows.length },
-  };
 }

@@ -5,11 +5,11 @@ import { PolyScheme, SchemeMapperContextValue } from "../types/SchemeMapperConte
 
 const defaultValues: SchemeMapperContextValue = {
   name: '',
-  image: null,
+  image: null, // { url: string; width: number; height: number } | null
   imageUrl: '',
   points: [],
   polygons: [],
-  exportData: {},
+  exportData: {}, // объект для записи в Google Sheets
   setName: () => {},
   setImage: () => {},
   setImageUrl: () => {},
@@ -24,16 +24,14 @@ export const SchemeMapperContextProvider = ({
 }: {
   children: ReactNode
 }) => {
-  const [name, setName] = useState(defaultValues.name);
-  const [image, setImage] = useState(defaultValues.image);
-  const [points, setPoints] = useState<number[]>(defaultValues.points);
+  const [name, setName] = useState(defaultValues.name)
+  const [image, setImage] = useState<{ url: string; width: number; height: number } | null>(defaultValues.image)
+  const [points, setPoints] = useState<number[]>(defaultValues.points)
   const [polygons, setPolygons] = useState<PolyScheme[]>(defaultValues.polygons);
   const [imageUrl, setImageUrl] = useState(defaultValues.imageUrl);
 
   const exportData = useMemo(() => {
-    if (!image || !polygons.length) {
-      return defaultValues.exportData
-    }
+    if (!image || !polygons.length) return defaultValues.exportData
 
     return {
       name: name || 'NONAME',
@@ -42,12 +40,12 @@ export const SchemeMapperContextProvider = ({
         width: image.width,
         height: image.height,
       },
-      areas: polygons
+      areas: polygons,
     }
   }, [name, image, polygons])
 
   return (
-    <SchemeMapperContext.Provider 
+    <SchemeMapperContext.Provider
       value={{
         name,
         image,

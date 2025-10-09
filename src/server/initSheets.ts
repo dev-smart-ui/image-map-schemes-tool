@@ -1,84 +1,46 @@
 "use server";
 
-import { google } from "googleapis";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getSheetsClient } from "@/lib/gcp/sheetsClient";
 import { GOOGLE_SHEET } from "@/lib/constants";
 
-function sheetsClient(accessToken: string) {
-  const auth = new google.auth.OAuth2();
-  auth.setCredentials({ access_token: accessToken });
-  return google.sheets({ version: "v4", auth });
-}
 
-export async function ensureSheetsAndHeaders(spreadsheetId = GOOGLE_SHEET.id) {
-  const session = await getServerSession(authOptions);
-  const accessToken = (session as any)?.accessToken as string | undefined;
-  if (!accessToken) return { success: false, error: "Not authenticated" };
+export async function ensureSheetsAndHeaders(
+  spreadsheetId: string = GOOGLE_SHEET.id
+) {
+  try {
+    const sheets = getSheetsClient();
 
-  const sheets = sheetsClient(accessToken);
-  const floorsName = GOOGLE_SHEET.sheets.floors;
-  const polygonsName = GOOGLE_SHEET.sheets.polygons;
+    const meta = await sheets.spreadsheets.get({ spreadsheetId });
+    const sheetTitles = (meta.data.sheets ?? []).map(s => s.properties?.title).filter(Boolean) as string[];
+    const hasSchemes = sheetTitles.includes(GOOGLE_SHEET.sheets.schemes);
+    if (!hasSchemes) {
+      return { success: false, error: `Invalid spreadsheet: missing sheet "${GOOGLE_SHEET.sheets.schemes}"` };
+    }
 
-  const meta = await sheets.spreadsheets.get({ spreadsheetId });
-  const sheetProps = (meta.data.sheets ?? []).map(s => s.properties!).filter(Boolean);
-  const byTitle = new Map(sheetProps.map(p => [p.title!, p]));
-  const hasFloors = byTitle.has(floorsName);
-  const hasPolygons = byTitle.has(polygonsName);
-
-  const requests: any[] = [];
-
-  if (sheetProps.length === 1 && !hasFloors && !hasPolygons) {
-    requests.push({
-      updateSheetProperties: {
-        properties: { sheetId: sheetProps[0].sheetId, title: floorsName },
-        fields: "title",
-      },
+    const gr = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `'${GOOGLE_SHEET.sheets.schemes}'!A1:C1`,
+      majorDimension: "ROWS",
     });
-    requests.push({ addSheet: { properties: { title: polygonsName } } });
-  } else {
-    if (!hasFloors) requests.push({ addSheet: { properties: { title: floorsName } } });
-    if (!hasPolygons) requests.push({ addSheet: { properties: { title: polygonsName } } });
+    const header = (gr.data.values ?? [])[0] ?? [];
+    const expected = GOOGLE_SHEET.headers.schemes;
+
+    const equal =
+      header.length === expected.length &&
+      header.every((v: string, i: number) => String(v).trim() === expected[i]);
+
+    if (!equal) {
+      return {
+        success: false,
+        error: `Invalid spreadsheet: "${GOOGLE_SHEET.sheets.schemes}" must have columns: ${expected.join(
+          ", "
+        )} in the first row`,
+      };
+    }
+
+    return { success: true };
+  } catch (e: any) {
+    console.error(e?.response?.data || e);
+    return { success: false, error: e?.message || "Failed to validate spreadsheet" };
   }
-
-  if (requests.length) {
-    await sheets.spreadsheets.batchUpdate({ spreadsheetId, requestBody: { requests } });
-  }
-
-  await sheets.spreadsheets.values.batchUpdate({
-    spreadsheetId,
-    requestBody: {
-      valueInputOption: "RAW",
-      data: [
-        { range: `'${floorsName}'!A1`,   values: [GOOGLE_SHEET.headers.floors] },
-        { range: `'${polygonsName}'!A1`, values: [GOOGLE_SHEET.headers.polygons] },
-      ],
-    },
-  });
-
-  const meta2 = await sheets.spreadsheets.get({ spreadsheetId });
-  const findId = (title: string) =>
-    (meta2.data.sheets ?? []).find(s => s.properties?.title === title)?.properties?.sheetId!;
-
-  await sheets.spreadsheets.batchUpdate({
-    spreadsheetId,
-    requestBody: {
-      requests: [
-        {
-          updateSheetProperties: {
-            properties: { sheetId: findId(floorsName), gridProperties: { frozenRowCount: 1 } },
-            fields: "gridProperties.frozenRowCount",
-          },
-        },
-        {
-          updateSheetProperties: {
-            properties: { sheetId: findId(polygonsName), gridProperties: { frozenRowCount: 1 } },
-            fields: "gridProperties.frozenRowCount",
-          },
-        },
-      ],
-    },
-  });
-
-  return { success: true };
 }

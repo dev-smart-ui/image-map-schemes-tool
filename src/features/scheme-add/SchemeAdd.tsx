@@ -47,12 +47,24 @@ export const SchemeAdd = () => {
     setError('');
     setResult('');
 
-    let payload: any;
+    let parsed: any;
 
     try {
-      payload = JSON.parse(jsonText);
+      parsed = JSON.parse(jsonText);
     } catch {
       setError("Invalid JSON");
+      return;
+    }
+
+    const body = {
+      name: String(parsed?.name ?? ""),
+      url: String(parsed?.image?.url ?? ""),
+      json: parsed,
+      mode: "create",
+    };
+    
+    if (!body.name || !body.url) {
+      setError("Payload must contain name and image.url");
       return;
     }
 
@@ -61,7 +73,7 @@ export const SchemeAdd = () => {
     const { ok, status, data } = await safeFetchJson("/api/sheets/upsert", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
 
     setResult(data);

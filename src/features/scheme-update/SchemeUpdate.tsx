@@ -58,9 +58,9 @@ export const SchemeUpdate = () => {
     setError('');
     setResult('');
 
-    let payload: any;
+    let parsed: any;
     try {
-      payload = JSON.parse(updateJsonText);
+      parsed = JSON.parse(updateJsonText);
     } catch (e: any) {
       setError(e?.message || "Invalid JSON");
       setIsUpdatingSchemes(false);
@@ -68,10 +68,22 @@ export const SchemeUpdate = () => {
       return;
     }
 
+    const body = {
+      name: String(parsed?.name ?? ""),
+      url: String(parsed?.image?.url ?? ""),
+      json: parsed,
+      mode: "update",
+    };
+    if (!body.name || !body.url) {
+      setError("Payload must contain name and image.url");
+      setIsUpdatingSchemes(false);
+      return;
+    }
+
     const { ok, status, data } = await safeFetchJson("/api/sheets/upsert", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
 
     setResult(data);
