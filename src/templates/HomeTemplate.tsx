@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { GOOGLE_SHEET } from "@/lib/constants";
+import { useEffect, useState } from "react";
 import { SchemeMapper } from "@/features/scheme-mapper/SchemeMapper";
 
 async function safeFetchJson(input: RequestInfo | URL, init?: RequestInit) {
@@ -27,27 +26,6 @@ async function safeFetchJson(input: RequestInfo | URL, init?: RequestInit) {
   }
 }
 
-
-type Payload = {
-  floorOrLevel: string | number;
-  imageId: string;
-  imageUrl?: string;
-  imageSizes: { widthPx: number; heightPx: number };
-  units: { unitId: string; polygons: { points: [number, number][] }[] }[];
-};
-
-function isPayload(v: any): v is Payload {
-  return (
-    v &&
-    (typeof v.floorOrLevel === "string" || typeof v.floorOrLevel === "number") &&
-    typeof v.imageId === "string" &&
-    v.imageSizes &&
-    typeof v.imageSizes.widthPx === "number" &&
-    typeof v.imageSizes.heightPx === "number" &&
-    Array.isArray(v.units)
-  );
-}
-
 function Section({
   title,
   children,
@@ -65,7 +43,7 @@ function Section({
         padding: 18,
         background: "#ffffff",
         boxShadow: "0 6px 24px rgba(2, 76, 227, 0.05)",
-        overflow: 'hidden',
+        overflow: "hidden",
       }}
     >
       <div
@@ -86,73 +64,6 @@ function Section({
   );
 }
 
-function Table({ headers, rows }: { headers: string[]; rows: (string | number)[][] }) {
-  return (
-    <div
-      style={{
-        overflowX: "auto",
-        border: "1px solid #e6efff",
-        borderRadius: 10,
-        boxShadow: "0 1px 8px rgba(2,76,227,0.05)",
-      }}
-    >
-      <table style={{ borderCollapse: "collapse", width: "100%" }}>
-        <thead>
-          <tr>
-            {headers.map((h) => (
-              <th
-                key={h}
-                style={{
-                  textAlign: "left",
-                  padding: "10px 12px",
-                  borderBottom: "1px solid #e6efff",
-                  background: "#f6faff",
-                  color: "#0b2a6b",
-                  fontWeight: 700,
-                  whiteSpace: "nowrap",
-                  fontSize: 13,
-                }}
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length === 0 ? (
-            <tr>
-              <td colSpan={headers.length} style={{ padding: 12, color: "#6b7280" }}>
-                (empty)
-              </td>
-            </tr>
-          ) : (
-            rows.map((r, i) => (
-              <tr key={i}>
-                {r.map((c, j) => (
-                  <td
-                    key={j}
-                    style={{
-                      padding: "10px 12px",
-                      borderBottom: "1px solid #f1f5f9",
-                      verticalAlign: "top",
-                      fontFamily:
-                        j >= 2
-                          ? "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
-                          : undefined,
-                    }}
-                  >
-                    {String(c)}
-                  </td>
-                ))}
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 export default function HomeTemplate() {
   const [mode, setMode] = useState<"create" | "update" | "markup">("create");
 
@@ -160,25 +71,28 @@ export default function HomeTemplate() {
   const [jsonText, setJsonText] = useState(
     JSON.stringify(
       {
-        floorOrLevel: "5",
-        imageId: "layout-v1",
-        imageUrl: "http://...",
-        imageSizes: { widthPx: 3000, heightPx: 1800 },
-        units: [
+        name: "TOWER",
+        image: {
+          url: "https://image-map-schemes-tool.vercel.app/images/tower.png",
+          width: 1728,
+          height: 1330,
+        },
+        areas: [
           {
-            unitId: "A-501",
-            polygons: [
-              { points: [[0.12, 0.45], [0.25, 0.46], [0.22, 0.55], [0.1, 0.53]] },
-              { points: [[0.28, 0.44], [0.33, 0.44], [0.33, 0.5], [0.28, 0.5]] },
+            id: "c45bf1a6",
+            name: "NONAME",
+            shape: "poly",
+            coords: [413, 228, 506, 212, 542, 301, 440, 329, 389, 291],
+            polygon: [
+              [413, 228],
+              [506, 212],
+              [542, 301],
+              [440, 329],
+              [389, 291],
             ],
-          },
-          {
-            unitId: "B-502",
-            polygons: [{ points: [[0.1, 0.1], [0.9, 0.1], [0.9, 0.3], [0.1, 0.3]] }],
-          },
-          {
-            unitId: "C-503",
-            polygons: [{ points: [[0.6, 0.4], [0.8, 0.4], [0.85, 0.55], [0.75, 0.62], [0.6, 0.58]] }],
+            strokeColor: "#000",
+            fillColor: "rgba(255,0,0,0.3)",
+            preFillColor: "rgba(255,0,0,0.5)",
           },
         ],
       },
@@ -190,58 +104,26 @@ export default function HomeTemplate() {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const preview = useMemo(() => {
-    try {
-      const parsed = JSON.parse(jsonText);
-      if (!isPayload(parsed)) return { valid: false } as const;
-
-      const floorsHeaders = [
-        "floorOrLevel",
-        "imageId",
-        "imageUrl",
-        "widthPx",
-        "heightPx",
-        "updatedUtc (on write)",
-      ];
-      const floorsRows: (string | number)[][] = [
-        [
-          String(parsed.floorOrLevel),
-          parsed.imageId,
-          parsed.imageUrl ?? "",
-          parsed.imageSizes.widthPx,
-          parsed.imageSizes.heightPx,
-          "(server time)",
-        ],
-      ];
-
-      const polygonsHeaders = ["floorOrLevel", "unitId", "polygonsJson", "updatedUtc (on write)"];
-      const polygonsRows: (string | number)[][] = (parsed.units ?? []).map((u) => [
-        String(parsed.floorOrLevel),
-        u.unitId,
-        JSON.stringify({ polygons: u.polygons ?? [] }),
-        "(server time)",
-      ]);
-
-      return {
-        valid: true as const,
-        floors: { headers: floorsHeaders, rows: floorsRows },
-        polygons: { headers: polygonsHeaders, rows: polygonsRows },
-      };
-    } catch {
-      return { valid: false } as const;
-    }
-  }, [jsonText]);
-
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setResult(null);
 
-    let payload: any;
+    let parsed: any;
     try {
-      payload = JSON.parse(jsonText);
+      parsed = JSON.parse(jsonText);
     } catch {
       setError("Invalid JSON");
+      return;
+    }
+
+    const body = {
+      name: String(parsed?.name ?? ""),
+      url: String(parsed?.image?.url ?? ""),
+      json: parsed,
+    };
+    if (!body.name || !body.url) {
+      setError("Payload must contain name and image.url");
       return;
     }
 
@@ -249,7 +131,7 @@ export default function HomeTemplate() {
     const { ok, status, data } = await safeFetchJson("/api/sheets/upsert", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
     setResult(data);
     if (!ok || !data.success) setError(data.error || `HTTP ${status}`);
@@ -302,12 +184,22 @@ export default function HomeTemplate() {
     setUpdateErr(null);
     setUpdateRes(null);
 
-    let payload: any;
+    let parsed: any;
     try {
-      payload = JSON.parse(updateJsonText);
-      if (!isPayload(payload)) throw new Error("Payload schema mismatch");
+      parsed = JSON.parse(updateJsonText);
     } catch (e: any) {
-      setUpdateErr(e?.message || "Invalid JSON");
+      setUpdateErr("Invalid JSON");
+      setUpdating(false);
+      return;
+    }
+
+    const body = {
+      name: String(parsed?.name ?? ""),
+      url: String(parsed?.image?.url ?? ""),
+      json: parsed,
+    };
+    if (!body.name || !body.url) {
+      setUpdateErr("Payload must contain name and image.url");
       setUpdating(false);
       return;
     }
@@ -315,7 +207,7 @@ export default function HomeTemplate() {
     const { ok, status, data } = await safeFetchJson("/api/sheets/upsert", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
     setUpdateRes(data);
     if (!ok || !data.success) setUpdateErr(data.error || `HTTP ${status}`);
@@ -366,7 +258,6 @@ export default function HomeTemplate() {
       </div>
     </div>
   );
-
 
   const MarkupSection = (
     <Section title="Mark up an image">
@@ -485,28 +376,8 @@ export default function HomeTemplate() {
           />
         </label>
 
-        <div style={{ display: "grid", gap: 16 }}>
-          <h3 style={{ margin: 0, color: "#0b2a6b" }}>Preview in tables</h3>
-
-          {!preview.valid ? (
-            <div style={{ color: "#b00020" }}>Invalid JSON or schema mismatch.</div>
-          ) : (
-            <>
-              <div style={{ fontWeight: 700, marginTop: 4, color: "#2956a3" }}>
-                Sheet: {GOOGLE_SHEET.sheets.floors}
-              </div>
-              <Table headers={preview.floors.headers} rows={preview.floors.rows} />
-
-              <div style={{ fontWeight: 700, marginTop: 8, color: "#2956a3" }}>
-                Sheet: {GOOGLE_SHEET.sheets.polygons} (rows: {preview.polygons.rows.length})
-              </div>
-              <Table headers={preview.polygons.headers} rows={preview.polygons.rows} />
-            </>
-          )}
-        </div>
-
         <button
-          disabled={saving || !preview.valid}
+          disabled={saving || !jsonText}
           style={{
             padding: "10px 14px",
             background: "#0b61ff",
@@ -544,22 +415,10 @@ export default function HomeTemplate() {
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: 20, display: "grid", gap: 14 }}>
       {Switcher}
-      <div
-        style={{
-          fontSize: 14,
-          opacity: 0.85,
-          marginBottom: 10,
-          textAlign: "center",
-          color: "#2956a3",
-        }}
-      >
-        Sheets:{" "}
-        <code>{GOOGLE_SHEET.sheets.floors}</code>, <code>{GOOGLE_SHEET.sheets.polygons}</code>
-      </div>
 
-      { mode === "markup" && MarkupSection }
-      { mode === "update" && UpdateSection }
-      { mode === "create" && CreateSection }      
+      {mode === "markup" && MarkupSection}
+      {mode === "update" && UpdateSection}
+      {mode === "create" && CreateSection}
     </div>
   );
 }

@@ -5,10 +5,10 @@ import { PolyScheme, SchemeMapperContextValue } from "../types/SchemeMapperConte
 
 const defaultValues: SchemeMapperContextValue = {
   name: 'NONAME',
-  image: null,
+  image: null, // { url: string; width: number; height: number } | null
   points: [],
   polygons: [],
-  exportData: {},
+  exportData: {}, // объект для записи в Google Sheets
   setName: () => {},
   setImage: () => {},
   setPoints: () => {},
@@ -17,33 +17,42 @@ const defaultValues: SchemeMapperContextValue = {
 
 export const SchemeMapperContext = createContext(defaultValues)
 
-export const SchemeMapperContextProvider = ({ 
-  children
-}: {
-  children: ReactNode
-}) => {
-  const [name, setName] = useState(defaultValues.name);
-  const [image, setImage] = useState(defaultValues.image);
-  const [points, setPoints] = useState<number[]>(defaultValues.points);
-  const [polygons, setPolygons] = useState<PolyScheme[]>(defaultValues.polygons);
+export const SchemeMapperContextProvider = ({ children }: { children: ReactNode }) => {
+  const [name, setName] = useState(defaultValues.name)
+  const [image, setImage] = useState<{ url: string; width: number; height: number } | null>(defaultValues.image)
+  const [points, setPoints] = useState<number[]>(defaultValues.points)
+  const [polygons, setPolygons] = useState<PolyScheme[]>(defaultValues.polygons)
 
+  // Формируем payload строго по схеме:
+  // {
+  //   name,
+  //   url: image.url,
+  //   json: {
+  //     name,
+  //     image: { url, width, height },
+  //     areas: polygons
+  //   }
+  // }
   const exportData = useMemo(() => {
-    if (!image || !polygons.length) {
-      return defaultValues.exportData
-    }
+    if (!image || !polygons.length) return defaultValues.exportData
 
     return {
       name: name || defaultValues.name,
-      image: {
-        width: image.width,
-        height: image.height,
+      url: image.url,
+      json: {
+        name: name || defaultValues.name,
+        image: {
+          url: image.url,
+          width: image.width,
+          height: image.height,
+        },
+        areas: polygons,
       },
-      areas: polygons
     }
   }, [name, image, polygons])
 
   return (
-    <SchemeMapperContext.Provider 
+    <SchemeMapperContext.Provider
       value={{
         name,
         image,
@@ -53,7 +62,7 @@ export const SchemeMapperContextProvider = ({
         setName,
         setImage,
         setPoints,
-        setPolygons
+        setPolygons,
       }}
     >
       {children}
