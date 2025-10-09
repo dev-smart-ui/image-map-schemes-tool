@@ -5,23 +5,23 @@ import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { saveOrUpdateFloorPolygons } from "@/server/saveOrUpdateFloorPolygons";
 
-function normalizePayload(raw: any) {
+function normalizePayload(raw: any) {  
   const src = raw?.exportData ? raw.exportData : raw;
   return {
     name: src?.name,
-    url: src?.url,
-    json: src?.json,
+    url: src?.image?.url ?? src?.url, 
+    json: src?.json ?? src,
+    mode: src?.mode, 
   };
 }
 
-function isValid(body: any): body is { name: string; url: string; json: unknown } {
+function isValid(body: any): body is { name: string; url: string; json: unknown; mode?: "create" | "update" } {
   return (
     body &&
-    typeof body.name === "string" &&
-    body.name.trim().length > 0 &&
-    typeof body.url === "string" &&
-    body.url.trim().length > 0 &&
-    (typeof body.json === "string" || typeof body.json === "object")
+    typeof body.name === "string" && body.name.trim().length > 0 &&
+    typeof body.url === "string"  && body.url.trim().length > 0 &&
+    (typeof body.json === "string" || typeof body.json === "object") &&
+    (body.mode === undefined || body.mode === "create" || body.mode === "update")
   );
 }
 
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const body = normalizePayload(rawBody);
     if (!isValid(body)) {
       return NextResponse.json(
-        { success: false, error: "Invalid payload: expected { name:string, url:string, json:object|string }" },
+        { success: false, error: "Invalid payload: expected { name:string, url:string, json:object|string, mode?:\"create\"|\"update\" }" },
         { status: 400 }
       );
     }
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     const res = await saveOrUpdateFloorPolygons(body);
     return NextResponse.json(res, { status: res.success ? 200 : 400 });
   } catch (e: any) {
-    console.error("UPsert error:", e?.response?.data ?? e);
+    console.error("Upsert error:", e?.response?.data ?? e);
     return NextResponse.json({ success: false, error: e?.message || "Internal error" }, { status: 500 });
   }
 }
