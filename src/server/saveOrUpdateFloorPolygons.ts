@@ -1,57 +1,43 @@
 "use server";
 
-import { appendRows, findRowByFirstColumn, updateRow, findAllRowsByFirstColumn, deleteRowsByNumbers } from "@/lib/sheets";
+import { appendRows, findRowByFirstColumn } from "@/lib/sheets";
 import { ensureSheetsAndHeaders } from "./initSheets";
-
-const FLOORS_NAME = process.env.SHEETS_FLOORS!;
-const POLYGONS_NAME = process.env.SHEETS_POLYGONS!;
+import { GOOGLE_SHEET } from "@/lib/constants";
 
 export async function saveOrUpdateFloorPolygons(payload: any) {
-  if (!payload?.floorOrLevel || !payload?.imageId || !payload?.imageSizes) {
-    return { success: false, error: "Invalid payload" };
+  try {
+    if (!payload?.name || !payload?.url || !payload?.json) {
+      return { success: false, error: "Invalid payload. Expected { name, url, json }" };
+    }
+
+    const init = await ensureSheetsAndHeaders(GOOGLE_SHEET.id);
+    if (!init.success) return init;
+
+    const SHEET_NAME = GOOGLE_SHEET.sheets.schemes;
+    const existingRow = await findRowByFirstColumn(SHEET_NAME, payload.name);
+
+    if (existingRow) {
+      return {
+        success: false,
+        error: `Record with name "${payload.name}" already exists. Choose a unique name.`,
+      };
+    }
+
+    const now = new Date().toISOString();
+
+    const newRow = [
+      String(payload.name),
+      String(payload.url),
+      typeof payload.json === "string" ? payload.json : JSON.stringify(payload.json),
+      now,
+    ];
+
+    const ok = await appendRows(SHEET_NAME, [newRow], "A:D");
+    if (!ok) return { success: false, error: "Failed to append new row to Google Sheet." };
+
+    return { success: true, message: `Scheme "${payload.name}" successfully added.` };
+  } catch (e: any) {
+    console.error(e?.response?.data || e);
+    return { success: false, error: e?.message || "Internal server error" };
   }
-
-  const init = await ensureSheetsAndHeaders();
-  if (!init.success) return init;
-
-  const now = new Date().toISOString();
-
-  const floorsRow = [
-    String(payload.floorOrLevel),
-    String(payload.imageId),
-    String(payload.imageUrl ?? ""),
-    Number(payload.imageSizes?.widthPx ?? 0),
-    Number(payload.imageSizes?.heightPx ?? 0),
-    now,
-  ];
-
-  const existingRow = await findRowByFirstColumn(FLOORS_NAME, payload.floorOrLevel);
-
-  if (existingRow) {
-    await updateRow(FLOORS_NAME, existingRow, floorsRow, 6);
-  } else {
-    const ok = await appendRows(FLOORS_NAME, [floorsRow], "A:F");
-    if (!ok) return { success: false, error: "Append to Floors failed" };
-  }
-
-  const polygonRows: any[][] = (payload.units ?? []).map((u: any) => ([
-    String(payload.floorOrLevel),
-    String(u.unitId),
-    JSON.stringify({ polygons: u.polygons ?? [] }),
-    now,
-  ]));
-
-  const rowsToDelete = await findAllRowsByFirstColumn(POLYGONS_NAME, payload.floorOrLevel);
-  if (rowsToDelete.length) {
-    await deleteRowsByNumbers(POLYGONS_NAME, rowsToDelete);
-  }
-  if (polygonRows.length) {
-    const okPoly = await appendRows(POLYGONS_NAME, polygonRows, "A:D");
-    if (!okPoly) return { success: false, error: "Append to Polygons failed" };
-  }
-
-  return {
-    success: true,
-    data: { updatedFloorRow: !!existingRow, polygonsWritten: polygonRows.length },
-  };
 }
