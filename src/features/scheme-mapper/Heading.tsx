@@ -10,29 +10,54 @@ import { Divider } from "./Divider";
 export const Heading = () => {
   const { 
     name,
-    image, 
+    image,
     polygons, 
     exportData,
     setImage, 
+    setImageUrl,
     setName,
     setPoints,
     setPolygons 
   } = useSchemeMapperContext();
-  const imageInputRef = useRef<HTMLInputElement>(null)
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isShowResultModalOpen, setIsShowResultModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [imageUrlState, setImageUrlState] = useState('');
+  const [imageUrlError, setImageUrlError] = useState('');
 
-  const onImageInputChangeHandler = async (e: any) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const img = new window.Image();
-    img.src = URL.createObjectURL(file);
-    img.onload = () => setImage(img);
+  const onDownLoadClickHandler = async () => {
+    try {
+      setImageUrlError('');
+
+      const response = await fetch(imageUrlState);
+
+      if (response.status !== 200) {
+        throw 'err';
+      }
+
+      const blob = await response.blob();      
+
+      const file = new File([blob], 'image.jpg', { type: blob.type });
+
+      if (!file) return;      
+
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        setImage(img);
+      };
+
+      setImageUrl(imageUrlState); 
+    } catch(err) {
+      console.warn(err);     
+      setImageUrlError('Error in load image!'); 
+    }
   }
 
   const onRestartClickHandler = () => {
     setImage(null);
+    setImageUrlState('');
+    setImageUrl('');
     setPoints([]);
     setPolygons([]);
   }
@@ -56,16 +81,30 @@ export const Heading = () => {
     <div className="flex items-center gap-4 mb-4">
       { !image && (
         <>
-          <input 
-            ref={imageInputRef} 
-            type="file" 
-            className="hidden" 
-            onChange={e => onImageInputChangeHandler(e)} 
-          />
+          <div className="w-1/2">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="inputUrl">Image url:</label>
+              <input 
+                id="inputUrl"
+                type="text" 
+                className="bg-[var(--primary-color)] p-2 text-[14px]" 
+                value={imageUrlState}
+                onChange={e => setImageUrlState(e.target.value)}
+              />
+            </div>
 
-          <Button onClick={() => imageInputRef?.current?.click()}>
-            Download image
-          </Button>
+            {imageUrlError && (
+              <div className="text-[var(--error-color)] mt-2">{imageUrlError}</div>
+            )}
+
+            <Button 
+              className="mt-8" 
+              onClick={onDownLoadClickHandler}
+              disabled={!imageUrlState}
+            >
+              Download
+            </Button>
+          </div>
         </>
       )}
 

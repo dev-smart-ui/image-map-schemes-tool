@@ -6,11 +6,13 @@ import { PolyScheme, SchemeMapperContextValue } from "../types/SchemeMapperConte
 const defaultValues: SchemeMapperContextValue = {
   name: 'NONAME',
   image: null,
+  imageUrl: '',
   points: [],
   polygons: [],
   exportData: {},
   setName: () => {},
   setImage: () => {},
+  setImageUrl: () => {},
   setPoints: () => {},
   setPolygons: () => {},
 }
@@ -26,6 +28,7 @@ export const SchemeMapperContextProvider = ({
   const [image, setImage] = useState(defaultValues.image);
   const [points, setPoints] = useState<number[]>(defaultValues.points);
   const [polygons, setPolygons] = useState<PolyScheme[]>(defaultValues.polygons);
+  const [imageUrl, setImageUrl] = useState(defaultValues.imageUrl);
 
   const exportData = useMemo(() => {
     if (!image || !polygons.length) {
@@ -35,6 +38,7 @@ export const SchemeMapperContextProvider = ({
     return {
       name: name || defaultValues.name,
       image: {
+        url: imageUrl,
         width: image.width,
         height: image.height,
       },
@@ -47,13 +51,15 @@ export const SchemeMapperContextProvider = ({
       value={{
         name,
         image,
+        imageUrl,
         points,
         polygons,
         exportData,
         setName,
         setImage,
         setPoints,
-        setPolygons
+        setPolygons,
+        setImageUrl,
       }}
     >
       {children}
