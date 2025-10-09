@@ -4,7 +4,7 @@ import React, { createContext, ReactNode, useContext, useMemo, useState } from "
 import { PolyScheme, SchemeMapperContextValue } from "../types/SchemeMapperContext"
 
 const defaultValues: SchemeMapperContextValue = {
-  name: 'NONAME',
+  name: '',
   image: null,
   imageUrl: '',
   points: [],
@@ -36,7 +36,7 @@ export const SchemeMapperContextProvider = ({
     }
 
     return {
-      name: name || defaultValues.name,
+      name: name || 'NONAME',
       image: {
         url: imageUrl,
         width: image.width,

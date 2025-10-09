@@ -66,7 +66,7 @@ export const Heading = () => {
 
   const onExportModalAcceptClickHandler = () => {
     console.log(exportData);
-    navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
+    navigator.clipboard.writeText(JSON.stringify(exportData))
     setIsCopied(true);
   }
 
