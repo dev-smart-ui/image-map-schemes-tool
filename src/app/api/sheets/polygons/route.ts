@@ -1,35 +1,41 @@
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { google } from "googleapis";
-import { GOOGLE_SHEET } from "@/lib/constants";
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { jwtVerify } from 'jose';
+import { GOOGLE_SHEET } from '@/lib/constants';
+import { getSheetsClient } from '@/lib/gcp/sheetsClient';
 
-function sheetsFromToken(accessToken: string) {
-  const o = new google.auth.OAuth2();
-  o.setCredentials({ access_token: accessToken });
-  return google.sheets({ version: "v4", auth: o });
+async function ensureAuthorized() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('token')?.value;
+  if (!token) return false;
+  try {
+    await jwtVerify(token, new TextEncoder().encode(process.env.SIMPLE_LOGIN_SECRET));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const accessToken = (session as any)?.accessToken as string | undefined;
-  if (!accessToken) return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
+  if (!(await ensureAuthorized())) {
+    return NextResponse.json({ ok: false, error: 'Not authenticated' }, { status: 401 });
+  }
 
-  const floor = new URL(req.url).searchParams.get("floor");
+  const floor = new URL(req.url).searchParams.get('floor');
   if (!floor) return NextResponse.json({ ok: false, error: "Missing 'floor' param" }, { status: 400 });
 
   try {
-    const sheets = sheetsFromToken(accessToken);
+    const sheets = getSheetsClient();
 
     const fr = await sheets.spreadsheets.values.get({
       spreadsheetId: GOOGLE_SHEET.id,
       range: `'${GOOGLE_SHEET.sheets.floors}'!A2:F`,
-      majorDimension: "ROWS",
+      majorDimension: 'ROWS',
     });
     const frows = fr.data.values ?? [];
-    const fmeta = frows.find(r => String(r?.[0] ?? "") === String(floor));
+    const fmeta = frows.find(r => String(r?.[0] ?? '') === String(floor));
     if (!fmeta) return NextResponse.json({ ok: false, error: `Floor ${floor} not found` }, { status: 404 });
 
     const [floorOrLevel, imageId, imageUrl, widthPx, heightPx] = fmeta;
@@ -37,14 +43,14 @@ export async function GET(req: NextRequest) {
     const pr = await sheets.spreadsheets.values.get({
       spreadsheetId: GOOGLE_SHEET.id,
       range: `'${GOOGLE_SHEET.sheets.polygons}'!A2:D`,
-      majorDimension: "ROWS",
+      majorDimension: 'ROWS',
     });
-    const prows = (pr.data.values ?? []).filter(r => String(r?.[0] ?? "") === String(floor));
+    const prows = (pr.data.values ?? []).filter(r => String(r?.[0] ?? '') === String(floor));
 
     const byUnit = new Map<string, { unitId: string; polygons: { points: [number, number][] }[] }>();
     for (const row of prows) {
-      const unitId = String(row?.[1] ?? "");
-      const json = String(row?.[2] ?? "");
+      const unitId = String(row?.[1] ?? '');
+      const json = String(row?.[2] ?? '');
       if (!unitId) continue;
 
       let parsed: any = null;
@@ -68,6 +74,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, payload });
   } catch (e: any) {
     console.error(e?.response?.data || e);
-    return NextResponse.json({ ok: false, error: e?.message || "Failed" }, { status: 400 });
+    return NextResponse.json({ ok: false, error: e?.message || 'Failed' }, { status: 400 });
   }
 }

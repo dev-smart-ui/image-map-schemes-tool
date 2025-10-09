@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import { GOOGLE_SHEET } from "@/lib/constants";
 import { SchemeMapper } from "@/features/scheme-mapper/SchemeMapper";
@@ -155,7 +154,6 @@ function Table({ headers, rows }: { headers: string[]; rows: (string | number)[]
 }
 
 export default function HomeTemplate() {
-  const { data: session } = useSession();
   const [mode, setMode] = useState<"create" | "update" | "markup">("create");
 
   // CREATE state
