@@ -5,10 +5,12 @@
   --secondary-color: #fff;
   --text-color: #000;
   --ant-border-color: #0b61ff;
+  --blue-color: #0b61ff;
   --success-color: green;
   --error-color: red;
   --accent-color: #0b61ff;
   --accent-light-color: #e8f0ff;
+  --grey-color: #e5e7eb;
   --overlay-color: rgba(0,0,0,.8);
 }
 
@@ -17,9 +19,14 @@
     --primary-color: #ededed;
     --secondary-color: #fff;
     --text-color: #000;
-    --ant-border-color: red;
+    --ant-border-color: #0b61ff;
+    --blue-color: #0b61ff;
     --success-color: green;
     --error-color: red;
+    --accent-color: #0b61ff;
+    --accent-light-color: #e8f0ff;
+    --grey-color: e5e7eb;
+    --overlay-color: rgba(0,0,0,.8);
   }
 }
 
