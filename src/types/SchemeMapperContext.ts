@@ -3,6 +3,7 @@
 export type SchemeMapperContextValue = {
   name: string,
   image: any,
+  imageUrl: string,
   points: number[],
   polygons: PolyScheme[],
   exportData: ExportDataScheme | {},
@@ -10,6 +11,7 @@ export type SchemeMapperContextValue = {
   setImage: (image: any) => void,
   setPoints: (points: number[]) => void,
   setPolygons: (polygons: PolyScheme[]) => void,
+  setImageUrl: (url: string) => void,
 }
 
 export type PolyScheme = {

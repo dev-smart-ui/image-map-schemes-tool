@@ -1,7 +1,7 @@
 'use client'
 
 import { v4 as uuidv4 } from "uuid";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import config from './config.json';
 import { useSchemeMapperContext } from "@/context/SchemeMapperContext";
 import { PolyScheme } from "@/types/SchemeMapperContext";
@@ -29,10 +29,11 @@ export const Settings = ({
     setPoints,
     setPolygons,
   } = useSchemeMapperContext();
-  const inputPolyName = useRef<HTMLInputElement>(null);
-  const inputPolyPreFill = useRef<HTMLInputElement>(null);
-  const inputPolyFill = useRef<HTMLInputElement>(null);
-  const inputStroke = useRef<HTMLInputElement>(null);
+  const [inputPolyName, setInputPolyName] = useState('');
+  const [inputPolyPreFill, setInputPolyPreFill] = useState('');
+  const [inputPolyFill, setInputPolyFill] = useState('');
+  const [inputStroke, setInputStroke] = useState('');
+  const [isPrevColorsActive, setIsPrevColorsActive] = useState<boolean>(false);
 
   const finishPolygon = () => {
     if (points.length < POINTS_MIN * 2) return;
@@ -44,45 +45,33 @@ export const Settings = ({
 
     const newPoly = {
       id: uuidv4().slice(0, 8),
-      name: inputPolyName?.current?.value || 'NONAME',
+      name: inputPolyName || 'NONAME',
       shape: "poly",
       coords: points,
       polygon,
-      strokeColor: inputStroke?.current?.value || DEFAULT_STROKE,
-      fillColor: inputPolyFill?.current?.value || DEFAULT_FILL,
-      preFillColor: inputPolyPreFill?.current?.value || DEFAULT_PRE_FILL,
+      strokeColor: inputStroke || DEFAULT_STROKE,
+      fillColor: inputPolyFill || DEFAULT_FILL,
+      preFillColor: inputPolyPreFill || DEFAULT_PRE_FILL,
     };
 
     setPolygons([...polygons, newPoly]);
     setPoints([]);
 
-    if (inputPolyName.current) {
-      inputPolyName.current.value = '';
-    }
-
-    if (inputPolyFill.current) {
-      inputPolyFill.current.value = '';
-    }
-
-    if (inputPolyPreFill.current) {
-      inputPolyPreFill.current.value = '';
-    }
+    setInputPolyName('');    
+    setInputPolyFill('');
+    setInputPolyPreFill('');
+    setInputStroke('');
+    setIsPrevColorsActive(false);
 
     setIsAddNew(false)
   };
 
   const cancelPolygon = () => {
-    if (inputPolyName.current) {
-      inputPolyName.current.value = '';
-    }
-
-    if (inputPolyFill.current) {
-      inputPolyFill.current.value = '';
-    }
-
-    if (inputPolyPreFill.current) {
-      inputPolyPreFill.current.value = '';
-    }
+    setInputPolyName('');    
+    setInputPolyFill('');
+    setInputPolyPreFill('');
+    setInputStroke('');
+    setIsPrevColorsActive(false);
 
     setPoints([]);
     setIsAddNew(false)
@@ -94,36 +83,81 @@ export const Settings = ({
     setPolygons(polygons.filter(poly => poly.id !== id))
   }
 
+  const onPrevColorsClickHandler = () => {
+    const lastPolygon = [...polygons].reverse()[0];
+
+    setIsPrevColorsActive(!isPrevColorsActive)
+
+    setInputPolyFill(!isPrevColorsActive ?lastPolygon.fillColor : '');
+    setInputPolyPreFill(!isPrevColorsActive ?lastPolygon.preFillColor : '');
+    setInputStroke(!isPrevColorsActive ?lastPolygon.strokeColor : '');
+  }
+
   return (
     <div className="">
       { isAddNew && (
-        <div className="flex items-end min-h-[70px]">
-          <div className="flex items-center gap-4">
+        <div className="flex min-h-[70px]">
+          <div className="flex items-start gap-4">
             <div className="flex flex-col gap-2">
               <label htmlFor="inputPolyName">Name:</label>
-              <input id="inputPolyName" ref={inputPolyName} type="text" className="bg-[var(--primary-color)] p-2 text-[14px]" />
+              <input 
+                id="inputPolyName" 
+                type="text" 
+                className="bg-[var(--primary-color)] p-2 text-[14px]" 
+                value={inputPolyName} 
+                onChange={e => setInputPolyName(e.target.value)} 
+              />
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="inputPolyFill">Fill color:</label>
-              <input id="inputPolyFill" ref={inputPolyFill} type="text" className="bg-[var(--primary-color)] p-2 text-[14px]" />
+              <input 
+                id="inputPolyFill" 
+                type="text" 
+                className="bg-[var(--primary-color)] p-2 text-[14px]" 
+                value={inputPolyFill} 
+                onChange={e => setInputPolyFill(e.target.value)} 
+              />
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="inputPolyPreFill">Pre fill color:</label>
-              <input id="inputPolyPreFill" ref={inputPolyPreFill} type="text" className="bg-[var(--primary-color)] p-2 text-[14px]" />
+              <input 
+                id="inputPolyPreFill" 
+                type="text" 
+                className="bg-[var(--primary-color)] p-2 text-[14px]" 
+                value={inputPolyPreFill} 
+                onChange={e => setInputPolyPreFill(e.target.value)} 
+              />
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="inputStroke">Stroke color:</label>
-              <input id="inputStroke" ref={inputStroke} type="text" className="bg-[var(--primary-color)] p-2 text-[14px]" />
+              <input 
+                id="inputStroke" 
+                type="text" 
+                className="bg-[var(--primary-color)] p-2 text-[14px]" 
+                value={inputStroke} 
+                onChange={e => setInputStroke(e.target.value)} 
+              />
             </div>
+            { !!polygons.length && (
+              <div className="flex flex-col gap-2 h-full">
+                <label htmlFor="inputPrevColors" className="cursor-pointer">Prev colors:</label>
+                <input 
+                  id="inputPrevColors" 
+                  type="checkbox" 
+                  className="bg-[var(--primary-color)] p-2 text-[14px] cursor-pointer m-auto" 
+                  checked={isPrevColorsActive}
+                  onChange={onPrevColorsClickHandler}
+                />
+              </div>
+            )}            
           </div>
 
-          <div className="flex items-center gap-4 border-l border-l-2 border-[var(--secondary-color)] ml-8 pl-8">
+          <div className="flex items-center gap-4 border-l border-l-2 border-[var(--secondary-color)] ml-auto pl-8">
             <Button 
               onClick={cancelPolygon}
               type="secondary"
               withIcon
             >
-              Cancel
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
               </svg>
@@ -135,7 +169,6 @@ export const Settings = ({
               disabled={points.length < POINTS_MIN * 2}
               withIcon
             >
-              Save
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
               </svg>
