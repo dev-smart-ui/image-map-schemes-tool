@@ -121,6 +121,7 @@ export default function HomeTemplate() {
       name: String(parsed?.name ?? ""),
       url: String(parsed?.image?.url ?? ""),
       json: parsed,
+      mode: "create",
     };
     if (!body.name || !body.url) {
       setError("Payload must contain name and image.url");
@@ -197,6 +198,7 @@ export default function HomeTemplate() {
       name: String(parsed?.name ?? ""),
       url: String(parsed?.image?.url ?? ""),
       json: parsed,
+      mode: "update",
     };
     if (!body.name || !body.url) {
       setUpdateErr("Payload must contain name and image.url");
