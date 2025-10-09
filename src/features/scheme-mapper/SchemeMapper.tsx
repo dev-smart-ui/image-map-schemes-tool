@@ -17,7 +17,7 @@ export const SchemeMapper = () => {
   const [isAddNew, setIsAddNew] = useState(false);
 
   return (
-    <div className="py-3">
+    <div>
       <Heading />
 
       { image && (
