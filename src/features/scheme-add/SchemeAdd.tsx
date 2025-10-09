@@ -2,12 +2,46 @@ import { Button } from "@/components/ui/buttons/Button"
 import { Divider } from "../scheme-mapper/Divider"
 import { useState } from "react";
 import { safeFetchJson } from "@/services/safeFetchJson";
+import classNames from "classnames";
 
 export const SchemeAdd = () => {
   const [error, setError] = useState('');
+  const [errorJson, setErrorJson] = useState(false);
   const [result, setResult] = useState('');
   const [jsonText, setJsonText] = useState('')
+  const [schemeName, setSchemeName] = useState('')
+  const [schemeImageUrl, setSchemeImageUrl] = useState('')
   const [saving, setSaving] = useState(false);
+
+  const onJsonTextChangeHandler = (value: string) => {
+    setError('');
+    setErrorJson(false);
+    setSchemeName('');
+    setSchemeImageUrl('');
+
+    let parsedValue: any = '';
+    setJsonText(value);
+
+    try {
+      parsedValue = JSON.parse(value);
+    } catch {
+      setError("Invalid JSON");
+      setErrorJson(true);
+
+      return
+    }
+
+    const schemeNameToBeSaved = parsedValue?.name;
+    const schemeImageUrlToBeSaved = parsedValue?.image?.url;
+
+    if (schemeNameToBeSaved) {
+      setSchemeName(schemeNameToBeSaved)
+    }
+
+    if (schemeImageUrlToBeSaved) {
+      setSchemeImageUrl(schemeImageUrlToBeSaved)
+    }    
+  }
 
   const onSave = async () => {
     setError('');
@@ -39,22 +73,47 @@ export const SchemeAdd = () => {
 
   return (
     <div>
-      <div className="flex flex-col gap-2">
+      <div className="flex items-start gap-4">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="inputSchemeName">Scheme name:</label>
+          <input 
+            id="inputSchemeName" 
+            type="text" 
+            className="bg-[var(--primary-color)] p-2 text-[14px]" 
+            value={schemeName} 
+            onChange={e => setSchemeName(e.target.value)} 
+          />
+        </div>
+        <div className="flex flex-col gap-2 w-full">
+          <label htmlFor="schemeImageUrl">Scheme image url:</label>
+          <input 
+            id="schemeImageUrl" 
+            type="text" 
+            className="bg-[var(--primary-color)] p-2 text-[14px]" 
+            value={schemeImageUrl} 
+            onChange={e => setSchemeImageUrl(e.target.value)} 
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 mt-4">
         <label htmlFor="addPayload" className="">Payload JSON</label>
         <textarea
           id="addPayload"
           rows={18}
           spellCheck={false}
-          className="w-full p-3 rounded-lg border border-[var(--primary-color)]"
+          className={classNames('w-full p-3 rounded-lg border border-[var(--primary-color)]', {
+            '!border-[var(--error-color)] outline-none': errorJson,
+          })}
           value={jsonText}
-          onChange={e => setJsonText(e.target.value)}
+          onChange={e => onJsonTextChangeHandler(e.target.value)}
         />
       </div>
 
       <Button 
         className="mt-8"
         onClick={onSave}
-        disabled={!jsonText}
+        disabled={!jsonText || !schemeName || !schemeImageUrl}
         withIcon
       >
         {saving ? "Saving..." : "Save"}
