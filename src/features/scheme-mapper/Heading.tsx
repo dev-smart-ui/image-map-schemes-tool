@@ -6,6 +6,7 @@ import { Modal } from "@/components/ui/modals/Modal";
 import { Button } from "@/components/ui/buttons/Button";
 import { Mapper } from "./Mapper";
 import { Divider } from "./Divider";
+import classNames from "classnames";
 
 export const Heading = () => {
   const { 
@@ -80,7 +81,9 @@ export const Heading = () => {
   }, [name])
 
   return (
-    <div className="flex items-center gap-4 mb-4">
+    <div className={classNames('flex items-center gap-4', {
+      'mb-4': image
+    })}>
       { !image && (
         <>
           <div className="w-1/2">
