@@ -1,7 +1,5 @@
 import React from 'react';
 import { Layer, Stage, Image as KonvaImage, Line, Circle } from "react-konva";
-import styles from './Polygons.module.scss'
-import classNames from 'classnames';
 import { useSchemeMapperContext } from '@/context/SchemeMapperContext';
 
 export const Polygons = ({
@@ -31,9 +29,7 @@ export const Polygons = ({
   };
 
   return (
-    <div className={classNames('', {
-      [styles.animBorder]: isAddNew
-    })}>
+    <div>
       <Stage
         width={image.width}
         height={image.height}
