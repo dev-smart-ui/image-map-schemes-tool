@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   const form = await req.formData();
   const file = form.get('file') as File | null;
-  const parent = String(form.get('parent') ?? ''); // id папки, расшаренной на SA
+  const parent = String(form.get('parent') ?? '');
 
   if (!file) return NextResponse.json({ ok: false, error: 'Missing file' }, { status: 400 });
 

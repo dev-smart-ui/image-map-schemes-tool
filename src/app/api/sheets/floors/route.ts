@@ -1,14 +1,14 @@
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
-import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
-import { GOOGLE_SHEET } from '@/lib/constants';
-import { getSheetsClient } from '@/lib/gcp/sheetsClient';
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { jwtVerify } from "jose";
+import { getSheetsClient } from "@/lib/gcp/sheetsClient";
+import { GOOGLE_SHEET } from "@/lib/constants";
+import { ensureSheetsAndHeaders } from "@/lib/../server/initSheets"; // путь подкорректируй если нужен
 
 async function ensureAuthorized() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value;
+  const token = (await cookies()).get("token")?.value;
   if (!token) return false;
   try {
     await jwtVerify(token, new TextEncoder().encode(process.env.SIMPLE_LOGIN_SECRET));
@@ -20,21 +20,28 @@ async function ensureAuthorized() {
 
 export async function GET(_req: NextRequest) {
   if (!(await ensureAuthorized())) {
-    return NextResponse.json({ ok: false, error: 'Not authenticated' }, { status: 401 });
+    return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
+  }
+
+  // валидируем книгу (есть Schemes и правильные заголовки)
+  const check = await ensureSheetsAndHeaders(GOOGLE_SHEET.id);
+  if (!check.success) {
+    return NextResponse.json({ ok: false, error: check.error || "Invalid spreadsheet" }, { status: 400 });
   }
 
   try {
     const sheets = getSheetsClient();
     const r = await sheets.spreadsheets.values.get({
       spreadsheetId: GOOGLE_SHEET.id,
-      range: `'${GOOGLE_SHEET.sheets.floors}'!A2:A`,
-      majorDimension: 'ROWS',
+      range: `'${GOOGLE_SHEET.sheets.schemes}'!A2:A`,
+      majorDimension: "ROWS",
     });
     const values = r.data.values ?? [];
-    const floors = Array.from(new Set(values.map(v => String(v?.[0] ?? '')).filter(Boolean)));
-    return NextResponse.json({ ok: true, floors });
+    // возвращаем список name (без пустых)
+    const names = Array.from(new Set(values.map(v => String(v?.[0] ?? "")).filter(Boolean)));
+    return NextResponse.json({ ok: true, floors: names }); // для обратной совместимости ключ оставил floors
   } catch (e: any) {
     console.error(e?.response?.data || e);
-    return NextResponse.json({ ok: false, error: e?.message || 'Failed' }, { status: 400 });
+    return NextResponse.json({ ok: false, error: e?.message || "Failed" }, { status: 400 });
   }
 }
