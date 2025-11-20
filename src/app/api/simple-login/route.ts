@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   res.cookies.set('token', token, {
     httpOnly: true,
     path: '/',
-    maxAge: 60 * 60 * 24,
+    maxAge: 60 * 60 * 24 * 7,
   });
 
   return res;

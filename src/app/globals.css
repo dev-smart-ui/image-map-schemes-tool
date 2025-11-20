@@ -35,3 +35,13 @@ body {
   color: var(--text-color);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.scrollbar {
+  scrollbar-color: var(--accent-light-color) transparent;
+  scrollbar-width: thin;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

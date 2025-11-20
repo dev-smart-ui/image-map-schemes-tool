@@ -3,7 +3,7 @@
 import { Divider } from "./Divider";
 import { useState } from "react";
 import { Polygons } from "./Polygons";
-import { Settings } from "./Settings";
+import { Settings } from "./Settings/Settings";
 import { useSchemeMapperContext } from "@/context/SchemeMapperContext";
 import { Heading } from "./Heading";
 import classNames from "classnames";
@@ -12,23 +12,22 @@ import styles from './SchemeMapper.module.scss'
 export const SchemeMapper = () => {
   const { 
     image,
+    isPolyAddMode,
   } = useSchemeMapperContext();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [isAddNew, setIsAddNew] = useState(false);
 
   return (
     <div>
       <Heading />
 
       { image && (
-        <div>
-          <div className={classNames('', {
-            [styles.animBorder]: isAddNew
+        <div className="flex gap-3">
+          <div className={classNames('w-3/4', {
+            [styles.animBorder]: isPolyAddMode
           })}>
-            <div className="flex gap-2 justify-center max-h-[60vh] overflow-auto overscroll-contain">
+            <div className="flex gap-2 justify-center max-h-[60vh] overflow-auto overscroll-contain scrollbar">
               <div className="max-w-full">
-                <Polygons 
-                  isAddNew={isAddNew}
+                <Polygons
                   hoveredId={hoveredId}
                   setHoveredId={setHoveredId}
                 />
@@ -36,11 +35,9 @@ export const SchemeMapper = () => {
             </div>
           </div>
 
-          <Divider />
+          {/* <Divider /> */}
 
           <Settings
-            isAddNew={isAddNew}
-            setIsAddNew={setIsAddNew}
             hoveredId={hoveredId}
             setHoveredId={setHoveredId}
           />

@@ -3,11 +3,9 @@ import { Layer, Stage, Image as KonvaImage, Line, Circle } from "react-konva";
 import { useSchemeMapperContext } from '@/context/SchemeMapperContext';
 
 export const Polygons = ({
-  isAddNew,
   hoveredId,
   setHoveredId
 }: {
-  isAddNew: boolean,
   hoveredId: string | null,
   setHoveredId: (id: string | null) => void
 }) => {
@@ -15,11 +13,12 @@ export const Polygons = ({
     image, 
     points, 
     polygons,
+    isPolyAddMode,
     setPoints,
   } = useSchemeMapperContext();
 
   const handleClick = (e: any) => {
-    if (!isAddNew) return
+    if (!isPolyAddMode) return
 
     const stage = e.target.getStage();
     const pointer = stage.getPointerPosition();

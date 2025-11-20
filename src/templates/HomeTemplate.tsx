@@ -6,6 +6,8 @@ import { Section } from "@/components/Section";
 import { Switcher } from "@/components/Switcher";
 import { SchemeAdd } from "@/features/scheme-add/SchemeAdd";
 import { SchemeUpdate } from "@/features/scheme-update/SchemeUpdate";
+import classNames from "classnames";
+import { useSchemeMapperContext } from "@/context/SchemeMapperContext";
 
 const tabs = [
   { key: "markup", label: "Mark up an image" },
@@ -16,8 +18,12 @@ const tabs = [
 export default function HomeTemplate() {
   const [activeTab, setActiveTab] = useState("markup");
 
+  const { image } = useSchemeMapperContext();
+
   return (
-    <div className="max-w-[1100px] mx-auto p-5 grid gap-3">
+    <div className={classNames('max-w-[1100px] mx-auto p-5 grid gap-3', {
+      'max-w-full': activeTab == 'markup' && image
+    })}>
       <Switcher 
         tabs={tabs} 
         activeTab={activeTab} 
