@@ -80,26 +80,41 @@ export const SchemeItem = ({
         <p className="opacity-70 mt-1">{item.name}</p>
       </div>
 
-      <div className="text-[12px]">
-        <p className="font-bold">Fill</p>
-        <p className="opacity-70 mt-1 w-[15px] h-[15px] mx-auto text-center" style={{ background: item.fillColor} }>
-          { item.fillColor == TRANSPARENT_OPTION_COLOR ? 'T' : ''}
-        </p>
-      </div>
+      { item.type == 'polygon' && (
+        <>
+          <div className="text-[12px]">
+            <p className="font-bold">Fill</p>
+            <p className="opacity-70 mt-1 w-[15px] h-[15px] mx-auto text-center" style={{ background: item.fillColor} }>
+              { item.fillColor == TRANSPARENT_OPTION_COLOR ? 'T' : ''}
+            </p>
+          </div>
 
-      <div className="text-[12px]">
-        <p className="font-bold">Pre</p>
-        <p className="opacity-70 mt-1 w-[15px] h-[15px] mx-auto text-center" style={{ background: item.preFillColor} }>
-          { item.fillColor == TRANSPARENT_OPTION_COLOR ? 'T' : ''}
-        </p>
-      </div>
+          <div className="text-[12px]">
+            <p className="font-bold">Pre</p>
+            <p className="opacity-70 mt-1 w-[15px] h-[15px] mx-auto text-center" style={{ background: item.preFillColor} }>
+              { item.fillColor == TRANSPARENT_OPTION_COLOR ? 'T' : ''}
+            </p>
+          </div>
 
-      <div className="text-[12px]">
-        <p className="font-bold">Stroke</p>
-        <p className="opacity-70 mt-1 w-[15px] h-[15px] mx-auto text-center" style={{ background: item.strokeColor} }>
-          { item.fillColor == TRANSPARENT_OPTION_COLOR ? 'T' : ''}
-        </p>
-      </div>
+          <div className="text-[12px]">
+            <p className="font-bold">Stroke</p>
+            <p className="opacity-70 mt-1 w-[15px] h-[15px] mx-auto text-center" style={{ background: item.strokeColor} }>
+              { item.fillColor == TRANSPARENT_OPTION_COLOR ? 'T' : ''}
+            </p>
+          </div>
+        </>
+      )}
+
+      { item.type == 'highlight' && (
+        <>
+          <div className="text-[12px]">
+            <p className="font-bold">Color</p>
+            <p className="opacity-70 mt-1 w-[15px] h-[15px] mx-auto text-center" style={{ background: item.fillColor} } />
+          </div>
+        </>
+      )}
+
+      
 
       <div className="self-center flex gap-2 ml-auto">
         {/* <Button

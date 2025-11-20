@@ -3,6 +3,7 @@ import React from 'react'
 import { v4 as uuidv4 } from "uuid";
 import { Button } from '@/components/ui/buttons/Button';
 import { HIGHLIGHT_COLOR } from '../constants';
+import { PopoverColorPicker } from '@/components/PopoverColorPicker';
 
 export const HighlightAdd = () => {
   const {
@@ -55,7 +56,7 @@ export const HighlightAdd = () => {
   }
 
   return (
-    <div className="sticky top-0 bg-white pb-4">
+    <div className="sticky top-0 bg-white pb-4 z-10">
       <div className="flex flex-wrap justify-between items-start gap-2">
         <div className="flex flex-col gap-1">
           <label className="text-sm" htmlFor="inputHighlightName">Name:</label>
@@ -68,7 +69,10 @@ export const HighlightAdd = () => {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm" htmlFor="inputHighlightColor">Color:</label>
+          <div className="flex items-center gap-1">
+            <label className="text-sm" htmlFor="inputHighlightColor">Color:</label>
+            <PopoverColorPicker color={inputHighlightColor} onChange={setInputHighlightColor} />
+          </div>
           <input 
             id="inputHighlightColor" 
             type="text" 

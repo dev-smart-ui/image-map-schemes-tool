@@ -1,9 +1,10 @@
 import { useSchemeMapperContext } from '@/context/SchemeMapperContext';
-import React from 'react'
+import React, { useState } from 'react'
 import { v4 as uuidv4 } from "uuid";
 import { PolyScheme } from '@/types/SchemeMapperContext';
 import { Button } from '@/components/ui/buttons/Button';
 import { POINTS_MIN, DEFAULT_STROKE, DEFAULT_FILL, DEFAULT_PRE_FILL, TRANSPARENT_OPTION_COLOR } from '../constants';
+import { PopoverColorPicker } from '@/components/PopoverColorPicker';
 
 export const PolyAddOrEdit = () => {
   const { 
@@ -105,8 +106,8 @@ export const PolyAddOrEdit = () => {
   }
 
   return (
-    <div className="sticky top-0 bg-white pb-4">
-      <div className="flex flex-wrap justify-between items-start gap-2">
+    <div className="sticky top-0 bg-white pb-4 z-10">
+      <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
           <label className="text-sm" htmlFor="inputPolyName">Name:</label>
           <input 
@@ -118,7 +119,10 @@ export const PolyAddOrEdit = () => {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm" htmlFor="inputPolyFill">Fill color:</label>
+          <div className="flex items-center gap-1">
+            <label className="text-sm" htmlFor="inputPolyFill">Fill color:</label>
+            <PopoverColorPicker color={inputPolyFill} onChange={setInputPolyFill} />
+          </div>
           <input 
             id="inputPolyFill" 
             type="text" 
@@ -128,7 +132,10 @@ export const PolyAddOrEdit = () => {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm" htmlFor="inputPolyPreFill">Pre fill color:</label>
+          <div className="flex items-center gap-1">
+            <label className="text-sm" htmlFor="inputPolyPreFill">Pre fill color:</label>
+            <PopoverColorPicker color={inputPolyPreFill} onChange={setInputPolyPreFill} />
+          </div>
           <input 
             id="inputPolyPreFill" 
             type="text" 
@@ -138,7 +145,10 @@ export const PolyAddOrEdit = () => {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm" htmlFor="inputStroke">Stroke color:</label>
+          <div className="flex items-center gap-1">
+            <label className="text-sm" htmlFor="inputStroke">Stroke color:</label>
+            <PopoverColorPicker color={inputStroke} onChange={setInputStroke} />
+          </div>
           <input 
             id="inputStroke" 
             type="text" 
@@ -147,7 +157,6 @@ export const PolyAddOrEdit = () => {
             onChange={e => setInputStroke(e.target.value)} 
           />
         </div>
-
         <div className='w-full flex flex-col gap-1'>
           { !!polygons.length && !polygonToEdit && (
             <div className="flex gap-2">

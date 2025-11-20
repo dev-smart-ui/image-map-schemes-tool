@@ -2,6 +2,7 @@
 
 import React, { createContext, ReactNode, useContext, useMemo, useState } from "react"
 import { PolyScheme, SchemeMapperContextValue } from "../types/SchemeMapperContext"
+import { DEFAULT_FILL, DEFAULT_PRE_FILL, DEFAULT_STROKE, HIGHLIGHT_COLOR } from "@/features/scheme-mapper/constants"
 
 const defaultValues: SchemeMapperContextValue = {
   name: '',
@@ -16,15 +17,15 @@ const defaultValues: SchemeMapperContextValue = {
   isHighlightAddMode: false,
 
   inputPolyName: '',
-  inputPolyPreFill: '',
-  inputPolyFill: '',
-  inputStroke: '',
+  inputPolyPreFill: DEFAULT_PRE_FILL,
+  inputPolyFill: DEFAULT_FILL,
+  inputStroke: DEFAULT_STROKE,
   isPrevColorsActive: false,
   isTransparentOptionActive: false,
   polygonToEdit: '',
 
   inputHighlightName: '',
-  inputHighlightColor: '',
+  inputHighlightColor: HIGHLIGHT_COLOR,
 
   setName: () => {},
   setImage: () => {},

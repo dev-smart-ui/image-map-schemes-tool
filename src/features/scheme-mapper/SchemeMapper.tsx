@@ -25,7 +25,7 @@ export const SchemeMapper = () => {
           <div className={classNames('w-3/4', {
             [styles.animBorder]: isPolyAddMode
           })}>
-            <div className="flex gap-2 justify-center max-h-[60vh] overflow-auto overscroll-contain scrollbar">
+            <div className="flex gap-2 justify-center max-h-[60vh] overflow-auto overscroll-contain scrollbar bg-[var(--accent-light-color)]">
               <div className="max-w-full">
                 <Polygons
                   hoveredId={hoveredId}
